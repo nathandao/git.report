@@ -1,0 +1,24 @@
+#rbenv-gemset folder
+.gems/
+.bundle/
+
+# Confidential files
+config.yml
+data/
+logs/
+
+# Autogenrated
+.sass-cache/
+assets/js/dist
+
+# npm dependencies
+node_modules/
+npm-debug.log
+
+# Test directory
+test/
+
+# misc
+test.rb
+.DS_Store
+.idea

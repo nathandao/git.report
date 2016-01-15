@@ -1,0 +1,11 @@
+.repo-button {
+  box-sizing: border-box;
+  cursor: pointer;
+  display: block;
+  height: 55px;
+  line-height: 48px;
+  margin-bottom: 20px;
+  text-align: center;
+  transition: background-color 0.1s ease-out;
+  font-weight: bold;
+}
