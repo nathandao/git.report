@@ -86,9 +86,7 @@ ORDER BY #{params[:order_by] ? params[:order_by] : 'commit_timestamp DESC'}
           }
         end
 
-        result.map{ |repo|
-          { repo_id: repo[0], commits: repo[1] }
-        }
+        result
       end
 
       def query_overview(params = {})
@@ -109,7 +107,7 @@ ORDER BY #{params[:order_by] ? params[:order_by] : 'commit_timestamp DESC'}
         query = ["
 MATCH
   (r)-[:HAS_COMMIT]->(c:Commit)
-WHERE #{conditions.join(' AND')}
+WHERE #{conditions.join(' AND ')}
 WITH c, r
 MATCH (a:Author)-[:AUTHORED]->(c)
 WITH
