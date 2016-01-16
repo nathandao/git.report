@@ -21,6 +21,10 @@ module Ginatra
         repos
       end
 
+      def redis
+        self.settins['redis']
+      end
+
       def update_interval
         interval = self.settings['update_interval'] || 60
         return interval
