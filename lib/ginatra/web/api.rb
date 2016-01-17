@@ -53,7 +53,9 @@ module Ginatra
     end
 
     def get_repo_list
-      repos = Ginatra::Config.repositories
+      repo_ids = Ginatra::Helper.repo_ids_from_param_in(@filter[:in])
+
+      repos = Ginatra::Config.repositories.select{ |key| repo_ids.include?(key) }
       repos.map { |key, value|
         {
           id: key,
