@@ -5,11 +5,17 @@ module Ginatra
   class RedisCache
     @redis ||= Redis.new(Ginatra::Config.redis)
     class << self
+      # Create all cache data.
+      def init_cache
+        repo_ids = Ginatra::Config.settings['repositories'].keys
+        update_overview(repo_ids)
+        update_commits(repo_ids)
+      end
 
       # Cache repo overview data in Redis cache
-      # with key overview_repoID
+      # with key overview_repoID.
       def update_overview(repo_ids)
-        Ginatra::Helper.query_overview(repo_ids).each do |repo_data|
+        Ginatra::Helper.query_overview({ in: repo_ids }).each do |repo_data|
           @redis.set(
             'overview_' + repo_data[0],
             repo_data[1].to_json
@@ -27,7 +33,7 @@ module Ginatra
         result
       end
 
-      # Cache past year commit data in Redis cache
+      # Cache past year commit data in Redis cache.
       def update_commits(repo_ids)
         params = { in: repo_ids }
         now = Time.now
@@ -40,10 +46,10 @@ module Ginatra
         end
       end
 
+      # Get all commits data in redis cache.
       def get_commits(repo_ids)
         result = {}
         repo_ids.each do |repo_id|
-          p repo_id
           result[repo_id] = JSON.parse(@redis.get('commits_' + repo_id), symbolize_names: true)
         end
         result
