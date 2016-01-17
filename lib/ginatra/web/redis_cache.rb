@@ -43,6 +43,7 @@ module Ginatra
       def get_commits(repo_ids)
         result = {}
         repo_ids.each do |repo_id|
+          p repo_id
           result[repo_id] = JSON.parse(@redis.get('commits_' + repo_id), symbolize_names: true)
         end
         result
