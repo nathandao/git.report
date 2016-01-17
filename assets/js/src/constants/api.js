@@ -4,10 +4,8 @@ if (process.env.NODE_ENV === 'production') {
   baseUrl = '';
 }
 
-export const API_REPO_LIST = `${baseUrl}/stat/repo_list`;
-export const API_CHART_TIMELINE_COMMITS = `${baseUrl}/stat/chart/timeline/commits`;
-export const API_COMMITS_OVERVIEW = `${baseUrl}/stat/commits_overview`;
-export const API_REPO_OVERVIEW = `${baseUrl}/stat/repo_overview`;
-export const API_COMMITS = `${baseUrl}/stat/commits`;
-export const API_AUTHORS = `${baseUrl}/stat/authors`;
-export const API_HOURS = `${baseUrl}/stat/hours`;
+export const REPOS = ['ginatra', 'wp_calypso', 'wordpress', 'drupal'];
+export const API_INIT_DATA = `${baseUrl}/api/init_data`;
+export const API_REPO_LIST = `${baseUrl}/api/repo_list`;
+export const API_OVERVIEW = `${baseUrl}/api/overview`;
+export const API_COMMITS = `${baseUrl}/api/commits`;

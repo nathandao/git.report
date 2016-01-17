@@ -7,14 +7,22 @@ class RepoActions {
       'requestRepoListError',
       'reorderRepos',
       'switchRepoVisibility',
+
       'loadCommitsOverview',
       'requestCommitsOverviewError',
+
       'requestCommits',
       'loadCommits',
+
       'loadContributors',
       'requestContributorsError',
+
       'loadHours',
-      'requestHoursError'
+      'requestHoursError',
+
+      'requestInitData',
+      'requestInitDataError',
+      'loadInitData'
     );
   }
 }

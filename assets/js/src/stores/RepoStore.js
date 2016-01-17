@@ -8,11 +8,17 @@ class RepoStore {
     this.bindActions(RepoActions);
     this.state = {
       repos: [],
-      commitsOverviews: [],
-      commitsData: [],
-      contributorsData: [],
-      hoursData: [],
+      overviews: [],
+      commits: [],
     };
+  }
+
+  onLoadInitData(data) {
+    this.setState({
+      repos: data.repoList,
+      overviews: data.overview,
+      commits: data.commits,
+    });
   }
 
   onLoadRepoList(repos) {
