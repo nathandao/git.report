@@ -23,7 +23,7 @@ class BaseChart extends React.Component {
       segmentStrokeColor: '#000',
     },
     chartData: {},
-  }
+  };
 
   constructor(props) {
     super(props);

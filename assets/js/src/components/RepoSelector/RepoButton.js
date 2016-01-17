@@ -7,7 +7,7 @@ require('./RepoButton.css');
 class RepoButton extends React.Component {
   switchVisibility = () => {
     RepoActions.switchRepoVisibility(this.props.repo.id);
-  }
+  };
 
   render() {
     let inlineStyle = {
