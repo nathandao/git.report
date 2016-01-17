@@ -145,8 +145,6 @@ RETURN
         result
       end
 
-      private
-
       def repo_ids_from_param_in(param_in)
         repo_ids = []
         # Always use array for :in
