@@ -71,13 +71,11 @@ module Ginatra
 
     get '/api/commits' do
       repo_ids = Ginatra::Helper.repo_ids_from_param_in(@filter[:in])
-      p repo_ids
       commits = Ginatra::RedisCache.get_commits(repo_ids)
 
       if !@filter[:from].nil? || !@filter[:til].nil?
         @filter[:from] ||= Time.new(0).to_s
         @filter[:til] ||= Time.now.to_s
-        p @filter
         from = Ginatra::Helper.epoch_time(@filter[:from])
         til = Ginatra::Helper.epoch_time(@filter[:til])
         commits.each do |commit|
@@ -93,7 +91,7 @@ module Ginatra
     end
 
     get '/api/overview' do
-      repo_ids = Ginatra::Helper.repo_ids_from_param_in(@filer[:in])
+      repo_ids = Ginatra::Helper.repo_ids_from_param_in(@filter[:in])
       Ginatra::RedisCache.get_overview(repo_ids).map{ |repo_data|
         { repoId: repo_data[0], overview: repo_data[1] }
       }.to_json
