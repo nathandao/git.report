@@ -22,7 +22,7 @@ module Ginatra
       end
 
       def redis
-        self.settins['redis']
+        self.settings['redis'] || nil
       end
 
       def update_interval
