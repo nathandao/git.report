@@ -12,6 +12,7 @@ require_relative 'ginatra/core/chart'
 require_relative 'ginatra/core/repository'
 require_relative 'ginatra/core/stat'
 
+require_relative 'ginatra/web/redis_cache'
 require_relative 'ginatra/web/api'
 require_relative 'ginatra/web/front'
 require_relative 'ginatra/web/websocket_server'
