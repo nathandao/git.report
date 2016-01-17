@@ -2,7 +2,6 @@ require 'chronic'
 require 'csv'
 require 'eventmachine'
 require 'fileutils'
-require 'neo4j-core'
 require 'rugged'
 require 'date'
 
