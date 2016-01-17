@@ -408,9 +408,6 @@ SET f.ignored = toInt(line.ignored)
       logger.info("Importing current files graph of #{@id}")
       import_current_files_graph
 
-      logger.info("Setting start timestamp of #{@id}")
-      set_repo_graph_start_time
-
       logger.info("Finished indexing repository #{id}. Duration: #{Time.now - start_time} seconds")
     end
 
