@@ -30,46 +30,40 @@ module Ginatra
       repo_list = nil
       commits = nil
       overview = nil
-      threads << Thread.new{
-        # Get repo list.
-        repo_list = Ginatra::Config.repositories.map { |key, value|
-          {
-            repoId: key,
-            name: value['name'],
-            color: value['color']
-          }
-        }
-      }
 
-      threads << Thread.new{
-        # Get commits within 7 days
-        from = Time.now - (7 * 24 * 3600)
-        from = Time.new(from.year, from.month, from.day)
-        commits = Ginatra::Stat.commits(from: from.to_s).map{ |repo|
-          { repoId: repo[0], commits: repo[1] }
-        }
-      }
-
-      threads << Thread.new{
-        # Get repo overview
-        overview = Ginatra::Stat.commits{@filter}
-      }
-
+      # Get all relevant data to initialize react dashboard
+      threads << Thread.new{ repo_list = get_repo_list }
+      threads << Thread.new{ commits = get_commits }
+      threads << Thread.new{ overview = get_overview }
       threads.each { |thread| thread.join }
+
       { repoList: repo_list, commits: commits , overview: overview }.to_json
     end
 
     get '/api/repo_list' do
-      repos = Ginatra::Config.repositories
-      repos.map { |key, value|
-        { id: key,
-          name: value['name'],
-          color: value['color']
-        }
-      }.to_json
+      get_repo_list.to_json
     end
 
     get '/api/commits' do
+      get_commits.to_json
+    end
+
+    get '/api/overview' do
+      get_overview.to_json
+    end
+
+    def get_repo_list
+      repos = Ginatra::Config.repositories
+      repos.map { |key, value|
+        {
+          id: key,
+          name: value['name'],
+          color: value['color']
+        }
+      }
+    end
+
+    def get_commits
       repo_ids = Ginatra::Helper.repo_ids_from_param_in(@filter[:in])
       commits = Ginatra::RedisCache.get_commits(repo_ids)
 
@@ -87,14 +81,14 @@ module Ginatra
 
       commits.map{ |repo_commit|
         { repoId: repo_commit[0], commits: repo_commit[1] }
-      }.to_json
+      }
     end
 
-    get '/api/overview' do
+    def get_overview
       repo_ids = Ginatra::Helper.repo_ids_from_param_in(@filter[:in])
       Ginatra::RedisCache.get_overview(repo_ids).map{ |repo_data|
         { repoId: repo_data[0], overview: repo_data[1] }
-      }.to_json
+      }
     end
   end
 end
