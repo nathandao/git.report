@@ -6,8 +6,7 @@ module Ginatra
     @redis ||= Redis.new(Ginatra::Config.redis)
     class << self
       # Create all cache data.
-      def init_cache
-        repo_ids = Ginatra::Config.settings['repositories'].keys
+      def init_cache(repo_ids)
         update_overview(repo_ids)
         update_commits(repo_ids)
       end
