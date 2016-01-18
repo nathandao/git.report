@@ -23,7 +23,6 @@ module Ginatra
 
       def query_commits(params={})
         repo_ids = repo_ids_from_param_in(params[:in])
-
         # Get conditions.
         conditions = ["r.id IN #{repo_ids.to_s}"]
         if params[:from]
@@ -58,18 +57,15 @@ RETURN
 ORDER BY #{params[:order_by] ? params[:order_by] : 'commit_timestamp DESC'}
 "
         query << "LIMIT #{params[:limit]}" if params[:limit]
-
         # Send the query.
         session = Ginatra::Db.session
         query_result = session.query(query.join(' '))
         session.close
-
         # Prepare result with empty commits array for each repo_id
         result = repo_ids.inject({}) { |val, repo_id|
           val[repo_id] ||= []
           val
         }
-
         # Get formatted result
         query_result.each do |row|
           result[row.repo_id] << {
@@ -85,13 +81,11 @@ ORDER BY #{params[:order_by] ? params[:order_by] : 'commit_timestamp DESC'}
             author_email: row.author_email
           }
         end
-
         result
       end
 
       def query_overview(params = {})
         repo_ids = repo_ids_from_param_in(params[:in])
-
         # Get conditions.
         conditions = ["r.id IN #{repo_ids.to_s}"]
         if params[:from]
@@ -102,7 +96,6 @@ ORDER BY #{params[:order_by] ? params[:order_by] : 'commit_timestamp DESC'}
           til = Ginatra::Helper.epoch_time(params[:til])
           conditions << "c.commit_timestamp <= #{til}"
         end
-
         # Create query parts
         query = ["
 MATCH
@@ -112,34 +105,45 @@ WITH c, r
 MATCH (a:Author)-[:AUTHORED]->(c)
 WITH
   r,
-  count(distinct a) as contributor_count,
-  count(distinct c) as commit_count
+  count(distinct a) AS contributor_count,
+  count(distinct c) AS commit_count,
+  c AS lastc ORDER BY c.commit_timestamp DESC LIMIT 1
 MATCH (:CurrentFileTree {origin_url: r.origin_url})-[:HAS_FILE]->(:File {ignored: 0})<-[ch:CHANGES]-()
 RETURN
-  r.id as repo_id,
-  r.start_timestamp as start_timestamp,
+  r.id AS repo_id,
+  r.start_timestamp AS start_timestamp,
   contributor_count,
   commit_count,
-  SUM(ch.additions - ch.deletions) as lines
+  SUM(ch.additions - ch.deletions) AS lines,
+  lastc.commit_time AS lastc_commit_time,
+  lastc.commit_timestamp AS lastc_commit_timestamp,
+  lastc.author_time AS lastc_author_time,
+  lastc.hash AS lastc_hash,
+  lastc.message AS lastc_message
 "]
         # Send the query.
         session = Ginatra::Db.session
         query_result = session.query(query.join(' '))
         session.close
-
         # Prepare result with empty commits array for each repo_id
         result = repo_ids.inject({}) { |val, repo_id|
           val[repo_id] ||= []
           val
         }
-
         # Get formatted result
         query_result.each do |row|
           result[row.repo_id] = {
             contributor_count: row.contributor_count,
             commit_count: row.commit_count,
             start_timestamp: row.start_timestamp,
-            lines: row.lines
+            lines: row.lines,
+            last_commit: {
+              hash: row.lastc_hash,
+              message: row.lastc_message,
+              author_time: row.lastc_author_time,
+              commit_time: row.lastc_commit_time,
+              commit_timestamp: row.lastc_commit_timestamp
+            }
           }
         end
         result
