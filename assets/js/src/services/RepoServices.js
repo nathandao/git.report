@@ -14,7 +14,6 @@ class RepoServices {
 
   initData() {
     let startTime = PULSE_TIME_STAMPS[0];
-    console.log(startTime);
     RepoActions.requestInitData();
     request({
       url: API_INIT_DATA,
