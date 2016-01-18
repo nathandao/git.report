@@ -36,7 +36,13 @@ module Ginatra
       def update_commits(repo_ids)
         params = { in: repo_ids }
         now = Time.now
-        params[:from] = Time.new(now.year - 1, now.month, 1).to_s
+        year = now.year
+        month = now.month - 1
+        if month == 0
+          year = year - 1
+          month = 12
+        end
+        params[:from] = Time.new(year, month, 1).to_s
         Ginatra::Helper.query_commits(params).each do |repo_data|
           @redis.set(
             'commits_' + repo_data[0],
