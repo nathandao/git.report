@@ -52,8 +52,8 @@ module Ginatra
       get_overview(@filter).to_json
     end
 
-    def get_repo_list
-      repo_ids = Ginatra::Helper.repo_ids_from_param_in(@filter[:in])
+    def get_repo_list(params = {})
+      repo_ids = Ginatra::Helper.repo_ids_from_param_in(params[:in])
       repos = Ginatra::Config.repositories.select{ |key| repo_ids.include?(key) }
       repos.map { |key, value|
         {
