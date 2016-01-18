@@ -13,7 +13,7 @@ class TodayOverview extends React.Component {
       additions: 0,
       deletions: 0,
     };
-    let visibleReposData = _.filter(this.props.commitsData, (repoData) => {
+    let visibleReposData = _.filter(this.props.commits, (repoData) => {
       let index = _.findIndex(this.props.visibleRepos, (repo) => {
         return repo.id === repoData.repoId;
       });

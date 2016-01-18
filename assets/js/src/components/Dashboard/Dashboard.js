@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import RepoCell from 'components/Charts/RepoCell';
 // import HourlyCommits from 'components/Charts/HourlyCommits';
-// import TodayOverview from 'components/Dashboard/TodayOverview';
+import TodayOverview from 'components/Dashboard/TodayOverview';
 // import ReposOverview from 'components/Dashboard/ReposOverview';
 import RepoSelector from 'components/RepoSelector/RepoSelector';
 
@@ -26,6 +26,10 @@ class Dashboard extends React.Component {
     return (
       <div>
         <section>
+          <div className="col-third">
+            <h3>Commits today</h3>
+            <TodayOverview commitsData={ this.props.commits } visibleRepos={ this._getVisibleRepos() } />
+          </div>
           <div className="col-two-third">
             <h3>Switch visibility</h3>
             <RepoSelector repos={ this.props.repos }/>
@@ -34,16 +38,6 @@ class Dashboard extends React.Component {
       </div>
     );
   }
-
-  /*
-  render() {
-    return (
-      <div>
-        Dashboard
-      </div>
-    );
-  }
-  */
 }
 
 export default Dashboard;
