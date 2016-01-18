@@ -1,13 +1,14 @@
 import React from 'react';
 import connectToStores from 'alt/utils/connectToStores';
 
+import DashboardStore from 'stores/DashboardStore';
 import RepoStore from 'stores/RepoStore';
 import ChartStore from 'stores/ChartStore';
 import Dashboard from 'components/Dashboard/Dashboard';
 
 class Home extends React.Component {
   static getStores() {
-    return [RepoStore, ChartStore];
+    return [RepoStore, ChartStore, DashboardStore];
   }
 
   static getPropsFromStores() {

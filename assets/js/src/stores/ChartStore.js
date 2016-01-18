@@ -16,13 +16,11 @@ class ChartStore {
     let index = _.findIndex(pulses, (pulse) => {
       return pulse.repoId === data.repoId;
     });
-
     if (index >= 0) {
       pulses[index] = data;
     } else {
       pulses.push(data);
     }
-
     this.setState({ pulses });
   }
 }

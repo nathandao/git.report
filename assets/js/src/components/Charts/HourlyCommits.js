@@ -21,7 +21,7 @@ class HourlyCommits extends React.Component {
   }
 
   getRepoDataset(repo) {
-    let repoCommitData = _.find(this.props.commitsData, (data) => {
+    let repoCommitData = _.find(this.props.commits, (data) => {
       return data.repoId === repo.id;
     });
     let rgb = [repo.rgb.r, repo.rgb.g, repo.rgb.b].join(', ');
@@ -49,7 +49,7 @@ class HourlyCommits extends React.Component {
       datasets: [],
     };
 
-    _.forEach(this.props.commitsData, (data) => {
+    _.forEach(this.props.commits, (data) => {
       let repo = _.find(this.props.repos, (repoData) => {
         return repoData.id === data.repoId;
       });

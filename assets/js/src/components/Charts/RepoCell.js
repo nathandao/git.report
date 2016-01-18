@@ -10,17 +10,14 @@ class RepoCell extends React.Component {
     let pulseData = _.find(this.props.repoPulses, (repoPulse) => {
       return repoPulse.repoId === repo.id;
     });
-
     if (pulseData) {
       repoContent = <BaseChart type="Line" chartData={ pulseData.chartData } width="1000" height="400"/>;
     }
-
     return repoContent;
   }
 
   render() {
     let repo = this.props.repo;
-
     return (
       <div className="col-third" key={ repo.id }>
         <div className="col-full">

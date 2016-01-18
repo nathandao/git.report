@@ -1,4 +1,5 @@
 import request from 'reqwest';
+import moment from 'moment';
 
 import RepoActions from 'actions/RepoActions';
 import {
@@ -13,7 +14,7 @@ import { PULSE_TIME_STAMPS } from 'constants/dashboard';
 class RepoServices {
 
   initData() {
-    let startTime = PULSE_TIME_STAMPS[0];
+    let startTime = moment.unix(PULSE_TIME_STAMPS[0]).format('YYYY-MM-DD 00:00');
     RepoActions.requestInitData();
     request({
       url: API_INIT_DATA,
