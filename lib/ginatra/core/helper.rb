@@ -106,22 +106,16 @@ MATCH (a:Author)-[:AUTHORED]->(c)
 WITH
   r,
   count(distinct a) AS contributor_count,
-  count(distinct c) AS commit_count,
-  c AS lastc ORDER BY c.commit_timestamp DESC LIMIT 1
+  count(distinct c) AS commit_count
 MATCH (:CurrentFileTree {origin_url: r.origin_url})-[:HAS_FILE]->(:File {ignored: 0})<-[ch:CHANGES]-()
 RETURN
   r.id AS repo_id,
   r.start_timestamp AS start_timestamp,
   contributor_count,
   commit_count,
-  SUM(ch.additions - ch.deletions) AS lines,
-  lastc.commit_time AS lastc_commit_time,
-  lastc.commit_timestamp AS lastc_commit_timestamp,
-  lastc.author_time AS lastc_author_time,
-  lastc.hash AS lastc_hash,
-  lastc.message AS lastc_message
+  SUM(ch.additions - ch.deletions) AS lines
 "]
-        # Send the query.
+        # Query repo overview data
         session = Ginatra::Db.session
         query_result = session.query(query.join(' '))
         session.close
@@ -136,15 +130,40 @@ RETURN
             contributor_count: row.contributor_count,
             commit_count: row.commit_count,
             start_timestamp: row.start_timestamp,
-            lines: row.lines,
-            last_commit: {
-              hash: row.lastc_hash,
-              message: row.lastc_message,
-              author_time: row.lastc_author_time,
-              commit_time: row.lastc_commit_time,
-              commit_timestamp: row.lastc_commit_timestamp
-            }
+            lines: row.lines
           }
+        end
+        # Query last commit data
+        repo_ids.each do |repo_id|
+          session = Ginatra::Db.session
+          last_commit_result = session.query("
+MATCH (r:Repository {id: '#{repo_id}'})-[:HAS_COMMIT]->(c:Commit)
+WITH
+  r.id AS repo_id,
+  c AS last_commit ORDER BY c.commit_timestamp DESC LIMIT 1
+MATCH (c)-[:AUTHORED_BY]->(a:Author)
+RETURN
+  repo_id,
+  last_commit.hash AS hash,
+  last_commit.author_time AS author_time,
+  last_commit.commit_time AS commit_time,
+  last_commit.commit_timestamp AS commit_timestamp,
+  last_commit.message AS message,
+  a.name AS author_name,
+  a.email AS author_email
+")
+          last_commit_result.each do |row|
+            result[row.repo_id][:last_commit] = {
+              hash: row.hash,
+              message: row.message,
+              commit_time: row.commit_time,
+              commit_timestamp: row.commit_timestamp,
+              author_time: row.author_time,
+              author_name: row.author_name,
+              author_email: row.author_email
+            }
+          end
+          session.close
         end
         result
       end
