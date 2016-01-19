@@ -5,7 +5,7 @@ environment ENV['RACK_ENV'] || 'production'
 daemonize true
 
 pidfile "/var/www/service.git.report/shared/tmp/pids/puma_web.pid"
-stdout_redirect "/var/www/service.git.report/shared/tmp/log/stdout", "/var/www/service.git.report/shared/tmp/log/stderr"
+stdout_redirect "/var/www/service.git.report/shared/tmp/logs/stdout", "/var/www/service.git.report/shared/tmp/logs/stderr"
 
 threads 0, 16
 

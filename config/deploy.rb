@@ -70,18 +70,19 @@ end
 namespace :puma do
   set :web_server, :puma
 
-  set_default :puma_role,      -> { user }
-  set_default :puma_env,       -> { fetch(:rack_env, 'production') }
-  set_default :puma_web_config,    -> { "#{deploy_to}/#{shared_path}/config/web.ru" }
-  set_default :puma_web_socket,    -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.sock" }
-  set_default :puma_web_state,     -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.state" }
-  set_default :puma_web_pid,       -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma_web.pid" }
-  set_default :puma_ws_config,    -> { "#{deploy_to}/#{shared_path}/config/websocket.ru" }
-  set_default :puma_ws_socket,    -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.sock" }
-  set_default :puma_ws_state,     -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.state" }
-  set_default :puma_ws_pid,       -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma_ws.pid" }
-  set_default :puma_cmd,       -> { "bundle exec puma" }
-  set_default :pumactl_cmd,    -> { "bundle exec pumactl" }
+  set_default :puma_role, -> { user }
+  set_default :puma_env, -> { fetch(:rack_env, 'production') }
+  set_default :puma_web, -> { "#{deploy_to}/#{shared_path}/config/puma_web.rb" }
+  set_default :puma_web_config, -> { "#{deploy_to}/#{shared_path}/config/web.ru" }
+  set_default :puma_web_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.sock" }
+  set_default :puma_web_state, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.state" }
+  set_default :puma_web_pid, -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma_web.pid" }
+  set_default :puma_ws_config, -> { "#{deploy_to}/#{shared_path}/config/websocket.ru" }
+  set_default :puma_ws_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.sock" }
+  set_default :puma_ws_state, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.state" }
+  set_default :puma_ws_pid, -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma_ws.pid" }
+  set_default :puma_cmd, -> { "bundle exec puma" }
+  set_default :pumactl_cmd, -> { "bundle exec pumactl" }
   set_default :pumactl_web_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/pumactl_web.sock" }
   set_default :pumactl_ws_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/pumactl_ws.sock" }
 
@@ -91,8 +92,11 @@ namespace :puma do
       if [ -e '#{pumactl_web_socket}' ]; then
         echo 'Puma is already running!';
       else
-        echo 'Starting puma...';
-        cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web_config} -q -d -e #{puma_env} -b 'unix://#{puma_web_socket}' -S #{puma_web_state} --pidfile #{puma_web_pid} --control 'unix://#{pumactl_web_socket}'
+        if [ -e '#{puma_web_config}' ]; then
+          cd #{deploy_to}/#{current_path} && #{puma_cmd} -q -d -e #{puma_env} -C #{puma_web_config}
+        else
+          cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web} -q -d -e #{puma_env} -b 'unix://#{puma_web_socket}' -S #{puma_web_state} --pidfile #{puma_web_pid} --control 'unix://#{pumactl_web_socket}'
+        fi
       fi
     ]
   end
