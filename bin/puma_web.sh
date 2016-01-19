@@ -1,5 +1,6 @@
 #! /bin/sh
 
+PUMA_WEB_RU= /var/www/service.git.report/current/config/web.ru
 PUMA_CONFIG_FILE=/var/www/service.git.report/current/config/puma_web.rb
 PUMA_PID_FILE=/var/www/service.git.report/shared/tmp/pids/puma_web.pid
 PUMA_SOCKET=/var/www/service.git.report/shared/tmp/sockets/puma_web.sock
@@ -28,7 +29,7 @@ case "$1" in
     echo "Starting web puma..."
       rm -f $PUMA_SOCKET
       if [ -e $PUMA_CONFIG_FILE ] ; then
-        bundle exec puma -C $PUMA_CONFIG_FILE
+        bundle exec puma $PUMA_WEB_RU -C $PUMA_CONFIG_FILE
       else
         bundle exec puma
       fi
