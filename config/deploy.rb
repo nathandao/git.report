@@ -91,7 +91,8 @@ namespace :puma do
       if [ -e '#{pumactl_web_socket}' ]; then
         echo 'Puma is already running!';
       else
-          cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web_config} -q -d -e #{puma_env} -b 'unix://#{puma_web_socket}' -S #{puma_web_state} --pidfile #{puma_web_pid} --control 'unix://#{pumactl_web_socket}'
+        echo 'Starting puma...';
+        cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web_config} -q -d -e #{puma_env} -b 'unix://#{puma_web_socket}' -S #{puma_web_state} --pidfile #{puma_web_pid} --control 'unix://#{pumactl_web_socket}'
       fi
     ]
   end
