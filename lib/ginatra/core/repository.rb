@@ -99,6 +99,7 @@ module Ginatra
           if behind_count > 0
             updated = true
             logger.info("Repo #{id} branch #{branch.name} is behind by #{behind_count} commits. Updating data...")
+            start_time = Time.now
             `cd #{@path} && git checkout #{branch.name} && git pull --rebase`
             walker = Rugged::Walker.new(@rugged_repo)
             branch = @rugged_repo.branches[branch.name]
@@ -181,6 +182,7 @@ module Ginatra
               end
             end
             import_diff_csv
+            logger.info("Repo #{id} branch #{branch.name} update is completed. Duration: #{Time.now - start_time} seconds")
           end
         end
       end
@@ -204,8 +206,8 @@ module Ginatra
     end
 
     def start_stream(channel, update_interval)
-      logger = Ginatra::Log.new().logger
       EM.add_periodic_timer(update_interval) {
+        logger = Ginatra::Log.new().logger
         if update_local == true
           Ginatra::Helper.update_cache([@id])
           sid = channel.subscribe { |msg|
