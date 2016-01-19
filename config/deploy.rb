@@ -9,7 +9,7 @@ require 'mina/rbenv'
 #   branch       - Branch name to deploy. (needed by mina/git)
 
 set :domain, 'service.git.report'
-set :deploy_to, '/var/www/service.git.report/'
+set :deploy_to, '/var/www/service.git.report'
 set :repository, 'git@github.com:nathandao/git.report.git'
 set :branch, 'master'
 set :user, 'deployer'
@@ -62,7 +62,7 @@ task :deploy => :environment do
     invoke :'bundle:install'
 
     to :launch do
-      invoke :'puma:phased_restart'
+      invoke :'puma:start'
     end
   end
 end
@@ -91,11 +91,7 @@ namespace :puma do
       if [ -e '#{pumactl_web_socket}' ]; then
         echo 'Puma is already running!';
       else
-        if [ -e '#{puma_web_config}' ]; then
-          cd #{deploy_to}/#{current_path} && #{puma_cmd} -q -d -e #{puma_env} -C #{puma_web_config}
-        else
-          cd #{deploy_to}/#{current_path} && #{puma_cmd} -q -d -e #{puma_env} -b 'unix://#{puma_web_socket}' -S #{puma_web_state} --pidfile #{puma_web_pid} --control 'unix://#{pumactl_web_socket}'
-        fi
+          cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web_config} -q -d -e #{puma_env} -b 'unix://#{puma_web_socket}' -S #{puma_web_state} --pidfile #{puma_web_pid} --control 'unix://#{pumactl_web_socket}'
       fi
     ]
   end
