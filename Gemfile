@@ -7,12 +7,15 @@ gem 'json'
 gem 'neo4j-core'
 gem 'redis'
 gem 'rugged'
+gem 'puma'
 gem 'signal'
 gem 'sinatra'
 gem 'sinatra-assetpack'
 gem 'sinatra-contrib'
 gem 'sinatra-cross_origin'
 gem 'sinatra-partial'
+gem 'mina'
+gem 'mina-puma'
 
 group :test do
   gem 'codeclimate-test-reporter', require: nil
