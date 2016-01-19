@@ -10,6 +10,7 @@ logs/
 # Autogenrated
 .sass-cache/
 assets/js/dist
+dump.rdb
 
 # npm dependencies
 node_modules/
