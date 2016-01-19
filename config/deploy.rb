@@ -41,6 +41,7 @@ task :setup => :environment do
   # Puma needs a place to store its pid file and socket file.
   queue! %(mkdir -p "#{deploy_to}/#{shared_path}/tmp/sockets")
   queue! %(chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/tmp/sockets")
+
   queue! %(mkdir -p "#{deploy_to}/#{shared_path}/tmp/pids")
   queue! %(chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/tmp/pids")
 
@@ -49,9 +50,6 @@ task :setup => :environment do
 
   queue! %[mkdir -p "#{deploy_to}/shared/data"]
   queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/data"]
-
-  queue! %[touch "#{deploy_to}/shared/config.yml"]
-  queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/config.yml"]
 end
 
 desc "Deploys the current version to the server."
@@ -62,7 +60,8 @@ task :deploy => :environment do
     invoke :'bundle:install'
 
     to :launch do
-      invoke :'puma:start'
+      invoke :'puma:phased_restart'
+      invoke :'puma:phased_restart_ws'
     end
   end
 end
@@ -72,31 +71,26 @@ namespace :puma do
 
   set_default :puma_role, -> { user }
   set_default :puma_env, -> { fetch(:rack_env, 'production') }
-  set_default :puma_web, -> { "#{deploy_to}/#{shared_path}/config/puma_web.rb" }
-  set_default :puma_web_config, -> { "#{deploy_to}/#{shared_path}/config/web.ru" }
-  set_default :puma_web_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.sock" }
-  set_default :puma_web_state, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.state" }
-  set_default :puma_web_pid, -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma_web.pid" }
-  set_default :puma_ws_config, -> { "#{deploy_to}/#{shared_path}/config/websocket.ru" }
-  set_default :puma_ws_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.sock" }
-  set_default :puma_ws_state, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.state" }
-  set_default :puma_ws_pid, -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma_ws.pid" }
   set_default :puma_cmd, -> { "bundle exec puma" }
   set_default :pumactl_cmd, -> { "bundle exec pumactl" }
+
+  set_default :puma_web, -> { "#{deploy_to}/current/config/web.ru" }
+  set_default :puma_web_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.sock" }
+  set_default :puma_web_state, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.state" }
   set_default :pumactl_web_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/pumactl_web.sock" }
+
+  set_default :puma_ws, -> { "#{deploy_to}/current/config/websocket.ru" }
+  set_default :puma_ws_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.sock" }
+  set_default :puma_ws_state, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.state" }
   set_default :pumactl_ws_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/pumactl_ws.sock" }
 
-  desc 'Start puma'
+  desc 'Start puma for API'
   task :start => :environment do
     queue! %[
       if [ -e '#{pumactl_web_socket}' ]; then
         echo 'Puma is already running!';
       else
-        if [ -e '#{puma_web_config}' ]; then
-          cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web} -q -d -e #{puma_env} -C #{puma_web_config}
-        else
-          cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web} -q -d -e #{puma_env} -b 'unix://#{puma_web_socket}' -S #{puma_web_state} --pidfile #{puma_web_pid} --control 'unix://#{pumactl_web_socket}'
-        fi
+        cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web} -d -e #{puma_env} -b 'unix://#{puma_web_socket}' --control 'unix://#{pumactl_web_socket}' --state #{puma_web_state}
       fi
     ]
   end
@@ -123,9 +117,52 @@ namespace :puma do
   task phased_restart: :environment do
     queue! %[
       if [ -e '#{pumactl_web_socket}' ]; then
-        cd #{deploy_to}/#{current_path} && #{pumactl_cmd} -S #{puma_web_state} --pidfile #{puma_web_pid} phased-restart
+        cd #{deploy_to}/#{current_path} && #{pumactl_cmd} #{puma_web} -S #{puma_web_state} phased-restart
       else
-        echo 'Puma is not running!';
+        echo 'Puma is not running, so starting puma...';
+        cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_web} -d -e #{puma_env} -b 'unix://#{puma_web_socket}' --control 'unix://#{pumactl_web_socket}' --state #{puma_web_state}
+      fi
+    ]
+  end
+
+
+  desc 'Start puma em-websocket'
+  task :start_ws => :environment do
+    queue! %[
+      if [ -e '#{pumactl_ws_socket}' ]; then
+        echo 'Puma em-websocket is already running!';
+      else
+        cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_ws} -d -e #{puma_env} -b 'unix://#{puma_ws_socket}' --control 'unix://#{pumactl_ws_socket}' --state #{puma_ws_state}
+      fi
+    ]
+  end
+
+  desc 'Stop puma em-websocket'
+  task stop_ws: :environment do
+    queue! %[
+      if [ -e '#{pumactl_ws_socket}' ]; then
+        cd #{deploy_to}/#{current_path} && #{pumactl_cmd} -S #{puma_ws_state} stop
+        rm -f '#{pumactl_ws_socket}'
+      else
+        echo 'Puma em-websocket not running!';
+      fi
+    ]
+  end
+
+  desc 'Restart puma em-websocket'
+  task restart_ws: :environment do
+    invoke :'puma_ws:stop'
+    invoke :'puma_ws:start'
+  end
+
+  desc 'Restart puma (phased restart)'
+  task phased_restart_ws: :environment do
+    queue! %[
+      if [ -e '#{pumactl_ws_socket}' ]; then
+        cd #{deploy_to}/#{current_path} && #{pumactl_cmd} #{puma_ws} -S #{puma_ws_state} phased-restart
+      else
+        echo 'Puma em-websocket is not running, so starting puma...';
+        cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_ws} -d -e #{puma_env} -b 'unix://#{puma_ws_socket}' --control 'unix://#{pumactl_ws_socket}' --state #{puma_ws_state}
       fi
     ]
   end
