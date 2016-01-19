@@ -10,7 +10,6 @@ require 'mina/rbenv'
 
 set :domain, 'service.git.report'
 set :deploy_to, '/var/www/service.git.report/'
-set :app_path, lambda { "#{deploy_to}/#{current_path}" }
 set :repository, 'git@github.com:nathandao/git.report.git'
 set :branch, 'master'
 set :user, 'deployer'
@@ -19,7 +18,7 @@ set :port, '22'
 
 # Manually create these paths in shared/ (eg: shared/config/database.yml) in your server.
 # They will be linked in the 'deploy:link_shared_paths' step.
-set :shared_paths, ['config.yml', 'logs', 'data']
+set :shared_paths, ['./config.yml', 'logs', 'data', 'tmp/pids', 'tmp/sockets']
 
 
 # This task is the environment that is loaded for most commands, such as
@@ -38,8 +37,12 @@ end
 # For Rails apps, we'll make some of the shared paths that are shared between
 # all releases.
 task :setup => :environment do
-  queue! %[mkdir -p "#{deploy_to}/shared/sockets"]
-  queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/sockets"]
+
+  # Puma needs a place to store its pid file and socket file.
+  queue! %(mkdir -p "#{deploy_to}/#{shared_path}/tmp/sockets")
+  queue! %(chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/tmp/sockets")
+  queue! %(mkdir -p "#{deploy_to}/#{shared_path}/tmp/pids")
+  queue! %(chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/tmp/pids")
 
   queue! %[mkdir -p "#{deploy_to}/shared/logs"]
   queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/logs"]
@@ -59,29 +62,70 @@ task :deploy => :environment do
     invoke :'bundle:install'
 
     to :launch do
-      invoke :'puma:restart'
+      invoke :'puma:phased_restart'
     end
   end
 end
 
 namespace :puma do
-  desc "Start the application"
-  task :start do
-    queue 'echo "-----> Start Puma"'
-    queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh start", :pty => false
+  set :web_server, :puma
+
+  set_default :puma_role,      -> { user }
+  set_default :puma_env,       -> { fetch(:rack_env, 'production') }
+  set_default :puma_web_config,    -> { "#{deploy_to}/#{shared_path}/config/web.ru" }
+  set_default :puma_web_socket,    -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.sock" }
+  set_default :puma_web_state,     -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_web.state" }
+  set_default :puma_web_pid,       -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma_web.pid" }
+  set_default :puma_ws_config,    -> { "#{deploy_to}/#{shared_path}/config/websocket.ru" }
+  set_default :puma_ws_socket,    -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.sock" }
+  set_default :puma_ws_state,     -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma_ws.state" }
+  set_default :puma_ws_pid,       -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma_ws.pid" }
+  set_default :puma_cmd,       -> { "bundle exec puma" }
+  set_default :pumactl_cmd,    -> { "bundle exec pumactl" }
+  set_default :pumactl_web_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/pumactl_web.sock" }
+  set_default :pumactl_ws_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/pumactl_ws.sock" }
+
+  desc 'Start puma'
+  task :start => :environment do
+    queue! %[
+      if [ -e '#{pumactl_web_socket}' ]; then
+        echo 'Puma is already running!';
+      else
+        if [ -e '#{puma_web_config}' ]; then
+          cd #{deploy_to}/#{current_path} && #{puma_cmd} -q -d -e #{puma_env} -C #{puma_web_config}
+        else
+          cd #{deploy_to}/#{current_path} && #{puma_cmd} -q -d -e #{puma_env} -b 'unix://#{puma_web_socket}' -S #{puma_web_state} --pidfile #{puma_web_pid} --control 'unix://#{pumactl_web_socket}'
+        fi
+      fi
+    ]
   end
 
-  desc "Stop the application"
-  task :stop do
-    queue 'echo "-----> Stop Puma"'
-    queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh stop"
+  desc 'Stop puma'
+  task stop: :environment do
+    queue! %[
+      if [ -e '#{pumactl_web_socket}' ]; then
+        cd #{deploy_to}/#{current_path} && #{pumactl_cmd} -S #{puma_web_state} stop
+        rm -f '#{pumactl_web_socket}'
+      else
+        echo 'Puma is not running!';
+      fi
+    ]
   end
 
-  desc "Restart the application"
-  task :restart do
-    queue 'echo "-----> Restart Puma"'
-    queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh restart"
+  desc 'Restart puma'
+  task restart: :environment do
+    invoke :'puma:stop'
+    invoke :'puma:start'
+  end
+
+  desc 'Restart puma (phased restart)'
+  task phased_restart: :environment do
+    queue! %[
+      if [ -e '#{pumactl_web_socket}' ]; then
+        cd #{deploy_to}/#{current_path} && #{pumactl_cmd} -S #{puma_web_state} --pidfile #{puma_web_pid} phased-restart
+      else
+        echo 'Puma is not running!';
+      fi
+    ]
   end
 end
-
-
