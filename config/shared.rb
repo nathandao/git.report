@@ -4,6 +4,8 @@ require 'rack/content_length'
 require 'rack/chunked'
 require 'eventmachine'
 
+Bundler.require(:default)
+
 require File.expand_path('../lib/ginatra/env', File.dirname(__FILE__))
 require File.expand_path('../lib/ginatra', File.dirname(__FILE__))
 

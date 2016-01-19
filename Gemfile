@@ -14,8 +14,8 @@ gem 'sinatra-assetpack'
 gem 'sinatra-contrib'
 gem 'sinatra-cross_origin'
 gem 'sinatra-partial'
-gem 'mina'
-gem 'mina-puma'
+gem 'mina', require: false
+gem 'mina-puma', require: false
 
 group :test do
   gem 'codeclimate-test-reporter', require: nil
