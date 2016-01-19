@@ -10,6 +10,7 @@ require 'mina/rbenv'
 
 set :domain, 'service.git.report'
 set :deploy_to, '/var/www/service.git.report/'
+set :app_path, lambda { "#{deploy_to}/#{current_path}" }
 set :repository, 'git@github.com:nathandao/git.report.git'
 set :branch, 'master'
 set :user, 'deployer'
