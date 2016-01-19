@@ -79,13 +79,118 @@ module Ginatra
     #   end
     # end
 
-    def pull
+    # Check if local repository is behind remote. Interate the ceck through each branch
+    def update_local
+      checkout_all_branches
+      @rugged_repo.branches.each do |branch|
+        if !branch.upstream.nil?
+          # Fetch remote updates. Command line is used since Rugged fetch 
+          # requires credentials config aka. extra complications.
+          `cd #{@path} && git checkout #{branch.name} && git fetch`
+        end
+      end
+      @rugged_repo.branches.each do |branch|
+        if branch.target.class == Rugged::Commit && !branch.upstream.nil? && branch.name
+          # If local branch is behind, pull and update commits graph and
+          # branch graph
+          behind_count = @rugged_repo.ahead_behind(branch.name, branch.upstream.name)[1]
+          if behind_count > 0
+            `cd #{@path} && git checkout #{branch.name} && git pull --rebase`
+            walker = Rugged::Walker.new(@rugged_repo)
+            branch = @rugged_repo.branches[branch.name]
+            walker.push(branch.target.oid)
+            p branch.target.time
+            # Only walk through inside the current branch
+            walker.simplify_first_parent
+            # Remove the old csv file before writing to the new one
+            remove_commit_csv_file
+            # Walk the walk
+            CSV.open(commit_csv_file, 'w') do |csv|
+              # Write CSV headers
+              csv << %w{ hash message author_email author_name author_time commit_time commit_timestamp parents }
+              # Init count value
+              i = 0
+              # Walk the walk
+              walker.each do |commit|
+                if i < behind_count
+                  i += 1
+                  author = commit.author
+                  committor = commit.committer
+                  csv << [
+                    commit.oid,
+                    commit.message.strip().gsub(/\n/, '').gsub(/"/, "'").gsub(/\\/, '\\\\\\'),
+                    author[:email],
+                    author[:name],
+                    author[:time],
+                    committor[:time],
+                    commit.epoch_time,
+                    commit.parent_ids.join(' ')
+                  ]
+                else
+                  # Stop the walk at the current local point
+                  walker.reset
+                end
+              end
+            end
+            # Import the updated commit csv
+            import_commits_csv
+
+            # Record the line changes output to a string and then reformat it into
+            # csv.
+            delimiter = '[<ginatra_commit_start>]'
+            stat_str = `cd #{path} && git log --numstat --max-count=#{behind_count} --format="#{delimiter}%H"`
+            # Split string at delimiter, so each string represents a commit with its
+            # commit hash and changes below it.
+            stat_arr = stat_str.split(delimiter).map { |str|
+              raw_stat = str.split(/\n/)
+              commit_hash = raw_stat[0]
+              if raw_stat.size <= 2
+                changes = []
+              else
+                changes = raw_stat[3..-1].map{ |change_str|
+                  raw_change = change_str.split(/\t/)
+                  {
+                    file_path: raw_change[2],
+                    file_path_on_disk: [@path, raw_change[2]].join('/'),
+                    additions: raw_change[0].to_i,
+                    deletions: raw_change[1].to_i
+                  }
+                }
+              end
+              { hash: commit_hash, changes: changes }
+            }
+            # Remove old diff csv file
+            remove_diff_csv_file
+            CSV.open(diff_csv_file, 'w') do |csv|
+              # Write csv headers
+              csv << %w{ hash additions deletions file_path file_path_on_disk }
+              # Write rows
+              stat_arr.each do |stat|
+                stat[:changes].each do |change|
+                  csv << [
+                    stat[:hash],
+                    change[:additions],
+                    change[:deletions],
+                    change[:file_path],
+                    change[:file_path_on_disk],
+                  ]
+                end
+              end
+            end
+            import_diff_csv
+          end
+        end
+      end
+      # Import branch graph again after all to update the latest branch info
+      import_branch_graph
+    end
+
+    def checkout_all_branches
       # Pull rebase on all remote branches
       @rugged_repo.branches.each do |branch|
-        if (branch.target.class == Rugged::Commit && branch.head? == false)
+        if branch.target.class == Rugged::Commit && branch.name
           branch_name = branch.name.split('/')[1..-1].join('/')
           `cd #{@path} && git checkout #{branch_name}`
-          `cd #{@path} && git pull --rebase`
         end
       end
 
@@ -121,7 +226,7 @@ module Ginatra
       @rugged_repo.branches.each do |branch|
         # Only add remote branches. Since HEAD is pointed to the current
         # local working branch
-        if (branch.target.class == Rugged::Commit && branch.head? == false)
+        if branch.target.class == Rugged::Commit && branch.name
           # Delete previous branch
           session.query("
 MATCH (r:Repository {origin_url: '#{@origin_url}'})-[:HAS_BRANCH]->(b:Branch {name: '#{branch.name}'}) DETACH
@@ -186,7 +291,7 @@ MERGE (b)-[:POINTS_TO]->(c)
       # Record the line changes output to a string and then reformat it into
       # csv.
       delimiter = '[<ginatra_commit_start>]'
-      stat_str = `cd #{path} && git log --numstat --format="#{delimiter}%H"`
+      stat_str = `cd #{path} && git log --all --numstat --format="#{delimiter}%H"`
 
       # Split string at delimiter, so each string represents a commit with its
       # commit hash and changes below it.
@@ -256,6 +361,12 @@ SET r.start_timestamp = c.commit_timestamp
 
     def import_commits_graph
       create_commits_csv
+      import_commits_csv
+      # Set repo's start timestamp property based on first commit's timestamp
+      set_repo_graph_start_time
+    end
+
+    def import_commits_csv
       session = Ginatra::Db.session
 
       # Establish contraints in indexes
@@ -292,13 +403,14 @@ FOREACH (parent_hash in split(line.parents, ' ') |
   MERGE (c)-[:HAS_PARENT]->(parent))
 ")
       session.close
-
-      # Set repo's start timestamp property based on first commit's timestamp
-      set_repo_graph_start_time
     end
 
     def import_diff_graph
       create_diff_csv
+      import_diff_csv
+    end
+
+    def import_diff_csv
       session = Ginatra::Db.session
 
       # Establish contraints in indexes
@@ -399,6 +511,8 @@ SET f.ignored = toInt(line.ignored)
       import_commits_graph
 
       logger.info("Importing branch graph of #{@id}")
+      # Make sure all local branches are following remote branches
+      checkout_all_branches
       import_branch_graph
 
       logger.info("Importing commit diff graph of #{@id}")
