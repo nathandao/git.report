@@ -81,7 +81,9 @@ module Ginatra
 
     # Check if local repository is behind remote. Interate the ceck through each branch
     def update_local
+      logger = Ginatra::Log.new().logger
       checkout_all_branches
+      updated = false
       @rugged_repo.branches.each do |branch|
         if !branch.upstream.nil?
           # Fetch remote updates. Command line is used since Rugged fetch 
@@ -95,11 +97,12 @@ module Ginatra
           # branch graph
           behind_count = @rugged_repo.ahead_behind(branch.name, branch.upstream.name)[1]
           if behind_count > 0
+            updated = true
+            logger.info("Repo #{id} branch #{branch.name} is behind by #{behind_count} commits. Updating data...")
             `cd #{@path} && git checkout #{branch.name} && git pull --rebase`
             walker = Rugged::Walker.new(@rugged_repo)
             branch = @rugged_repo.branches[branch.name]
             walker.push(branch.target.oid)
-            p branch.target.time
             # Only walk through inside the current branch
             walker.simplify_first_parent
             # Remove the old csv file before writing to the new one
@@ -183,6 +186,8 @@ module Ginatra
       end
       # Import branch graph again after all to update the latest branch info
       import_branch_graph
+      logger.info("Repo #{id} latest data update completed") if updated == true
+      updated
     end
 
     def checkout_all_branches
@@ -198,20 +203,23 @@ module Ginatra
       `cd #{path} && git checkout #{@head_branch}`
     end
 
-    # def start_stream(channel, update_interval)
-    #   EM.add_periodic_timer(update_interval) {
-    #     if change_exists?
-    #       refresh_data
-    #       sid = channel.subscribe { |msg| p ["repo #{@id} subscribed"] }
-    #       channel.push @id
-    #       channel.unsubscribe(sid)
-    #     end
+    def start_stream(channel, update_interval)
+      logger = Ginatra::Log.new().logger
+      EM.add_periodic_timer(update_interval) {
+        if update_local == true
+          Ginatra::Helper.update_cache([@id])
+          sid = channel.subscribe { |msg|
+            logger.info("repo #{@id} changes updated")
+          }
+          channel.push @id
+          channel.unsubscribe(sid)
+        end
 
-    #     # hit Control + C to stop
-    #     Signal.trap("INT")  { EventMachine.stop }
-    #     Signal.trap("TERM") { EventMachine.stop }
-    #   }
-    # end
+        # hit Control + C to stop
+        Signal.trap("INT")  { EventMachine.stop }
+        Signal.trap("TERM") { EventMachine.stop }
+      }
+    end
 
     def import_branch_graph
       session = Ginatra::Db.session
