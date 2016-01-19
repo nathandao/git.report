@@ -51,7 +51,7 @@ task :setup => :environment do
 end
 
 desc "Deploys the current version to the server."
-  task :deploy => :environment do
+task :deploy => :environment do
   deploy do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
@@ -61,25 +61,26 @@ desc "Deploys the current version to the server."
       invoke :'puma:restart'
     end
   end
+end
 
-  namespace :puma do
-    desc "Start the application"
-    task :start do
-      queue 'echo "-----> Start Puma"'
-      queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh start", :pty => false
-    end
+namespace :puma do
+  desc "Start the application"
+  task :start do
+    queue 'echo "-----> Start Puma"'
+    queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh start", :pty => false
+  end
 
-    desc "Stop the application"
-    task :stop do
-      queue 'echo "-----> Stop Puma"'
-      queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh stop"
-    end
+  desc "Stop the application"
+  task :stop do
+    queue 'echo "-----> Stop Puma"'
+    queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh stop"
+  end
 
-    desc "Restart the application"
-    task :restart do
-      queue 'echo "-----> Restart Puma"'
-      queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh restart"
-    end
+  desc "Restart the application"
+  task :restart do
+    queue 'echo "-----> Restart Puma"'
+    queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh restart"
   end
 end
+
 
