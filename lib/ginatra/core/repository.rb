@@ -209,7 +209,7 @@ module Ginatra
       EM.add_periodic_timer(update_interval) {
         logger = Ginatra::Log.new().logger
         if update_local == true
-          Ginatra::Helper.update_cache([@id])
+          Ginatra::RedisCache.update_cache([@id])
           sid = channel.subscribe { |msg|
             logger.info("repo #{@id} changes updated")
           }
