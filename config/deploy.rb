@@ -1,7 +1,6 @@
 require 'mina/bundler'
 require 'mina/git'
 require 'mina/rbenv'
-require 'mina/puma'
 
 # Basic settings:
 #   domain       - The hostname to SSH to.
@@ -44,7 +43,10 @@ task :setup => :environment do
   queue! %[mkdir -p "#{deploy_to}/shared/logs"]
   queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/logs"]
 
-  queue! %[mkdir -p "#{deploy_to}/shared/config.yml"]
+  queue! %[mkdir -p "#{deploy_to}/shared/data"]
+  queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/data"]
+
+  queue! %[touch "#{deploy_to}/shared/config.yml"]
   queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/config.yml"]
 end
 
@@ -56,7 +58,27 @@ desc "Deploys the current version to the server."
     invoke :'bundle:install'
 
     to :launch do
-      invoke :'puma:phased_restart'
+      invoke :'puma:restart'
+    end
+  end
+
+  namespace :puma do
+    desc "Start the application"
+    task :start do
+      queue 'echo "-----> Start Puma"'
+      queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh start", :pty => false
+    end
+
+    desc "Stop the application"
+    task :stop do
+      queue 'echo "-----> Stop Puma"'
+      queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh stop"
+    end
+
+    desc "Restart the application"
+    task :restart do
+      queue 'echo "-----> Restart Puma"'
+      queue "cd #{app_path} && RACK_ENV=#{stage} && bin/puma_web.sh restart"
     end
   end
 end
