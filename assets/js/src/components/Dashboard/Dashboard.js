@@ -17,7 +17,10 @@ class Dashboard extends React.Component {
   repoPulses() {
     let repos = this._getVisibleRepos();
     let content = repos.map((repo) => {
-      return <RepoCell commitsOverviews={ this.props.commitsOverviews } repoPulses={ this.props.repoPulses } repo={ repo } key={ 'repo-cell-' + repo.id }/>;
+      let pulse = _.find(this.props.repoPulses, pulseData => {
+        return pulseData.repoId === repo.id;
+      });
+      return <RepoCell pulse={ pulse } repo={ repo } key={ 'repo-cell-' + repo.id }/>;
     });
     return content;
   }

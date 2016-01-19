@@ -1,17 +1,12 @@
 import React from 'react';
-import _ from 'lodash';
 
 import BaseChart from 'components/Charts/BaseChart';
 
 class RepoCell extends React.Component {
   repoPulse() {
-    let repo = this.props.repo;
     let repoContent = <div>Loading...</div>;
-    let pulseData = _.find(this.props.repoPulses, (repoPulse) => {
-      return repoPulse.repoId === repo.id;
-    });
-    if (pulseData) {
-      repoContent = <BaseChart type="Line" chartData={ pulseData.chartData } width="1000" height="400"/>;
+    if (this.props.pulse) {
+      repoContent = <BaseChart type="Line" chartData={ this.props.pulse.chartData } width="1000" height="400"/>;
     }
     return repoContent;
   }

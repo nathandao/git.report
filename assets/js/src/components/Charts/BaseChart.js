@@ -15,7 +15,6 @@ class BaseChart extends React.Component {
     height: 400,
     type: 'Line',
     options: {
-      animationSteps: 60,
       responsive: true,
       scaleGridLineColor: 'rgba(255,255,255,0.5)',
       scaleLineColor: 'rgba(255,255,255,0.5)',

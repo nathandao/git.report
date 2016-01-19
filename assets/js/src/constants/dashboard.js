@@ -4,7 +4,7 @@ import moment from 'moment';
 export const DEFAULT_VISIBLE_REPOS = 6;
 
 // Repo Pulse.
-export const PULSE_PERIOD = 7;
+export const PULSE_PERIOD = 10;
 
 let todayEnd = moment(new Date()).hour(23).minute(59).second(59);
 let pulseTimeStamps = [];
@@ -16,7 +16,7 @@ for (let i = PULSE_PERIOD; i >= 0; i--) {
   pulseTimeLabels.push(currentDate.format('ddd DD.MM'));
 }
 pulseTimeStamps.push(todayEnd.unix());
-pulseTimeLabels.push(todayEnd.format('ddd DD.MM'));
+// pulseTimeLabels.push(todayEnd.format('ddd DD.MM'));
 export const PULSE_TIME_STAMPS = pulseTimeStamps;
 export const PULSE_TIME_LABELS = pulseTimeLabels;
 

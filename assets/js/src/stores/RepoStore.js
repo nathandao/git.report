@@ -149,13 +149,15 @@ class RepoStore {
         repoId,
         chartData: {
           labels: PULSE_TIME_LABELS,
-          datasets: {
-            label: 'Commit count',
-            fillColor: this._rgba(rgb, 0.5),
-            strokeColor: this._rgba(rgb, 1),
-            pointColor: this._rgba(rgb, 1),
-            data: [],
-          },
+          datasets: [
+            {
+              label: 'Commit count',
+              fillColor: this._rgba(rgb, 0.5),
+              strokeColor: this._rgba(rgb, 1),
+              pointColor: this._rgba(rgb, 1),
+              data: [],
+            },
+          ],
         },
       };
       for (let i = 0; i < PULSE_TIME_STAMPS.length - 1; i++) {
@@ -163,7 +165,7 @@ class RepoStore {
           let timeStamp = moment(new Date(commit.author_time)).unix();
           return timeStamp >= PULSE_TIME_STAMPS[i] && timeStamp < PULSE_TIME_STAMPS[i + 1];
         }).length;
-        pulseData.chartData.datasets.data.push(commitCount);
+        pulseData.chartData.datasets[0].data.push(commitCount);
       }
       repoPulses.push(pulseData);
     });
