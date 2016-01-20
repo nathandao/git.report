@@ -19,7 +19,9 @@ module Ginatra
           Signal.trap("INT")  { EventMachine.stop }
           Signal.trap("TERM") { EventMachine.stop }
         end
-        Ginatra::Stat.start_repo_streams(@channel, Ginatra::Config.update_interval)
+        Thread.new {
+          Ginatra::Stat.start_repo_streams(@channel, Ginatra::Config.update_interval)
+        }
       end
     end
   end
