@@ -1,8 +1,8 @@
 {
-  "name": "ginatra",
-  "version": "0.0.1",
+  "name": "git.report",
+  "version": "0.1.5",
   "description": "[![Build Status](https://travis-ci.org/nathandao/ginatra.svg?branch=master)](https://travis-ci.org/nathandao/ginatra) [![Code Climate](https://codeclimate.com/github/nathandao/ginatra/badges/gpa.svg)](https://codeclimate.com/github/nathandao/ginatra) [![Test Coverage](https://codeclimate.com/github/nathandao/ginatra/badges/coverage.svg)](https://codeclimate.com/github/nathandao/ginatra/coverage)",
-  "main": "assets/js/index.js",
+  "main": "assets/js/src/index.js",
   "directories": {
     "test": "test"
   },

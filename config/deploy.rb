@@ -1,6 +1,7 @@
 require 'mina/bundler'
 require 'mina/git'
 require 'mina/rbenv'
+require 'mina/npm'
 
 # Basic settings:
 #   domain       - The hostname to SSH to.
@@ -45,11 +46,14 @@ task :setup => :environment do
   queue! %(mkdir -p "#{deploy_to}/#{shared_path}/tmp/pids")
   queue! %(chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/tmp/pids")
 
-  queue! %[mkdir -p "#{deploy_to}/shared/logs"]
-  queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/logs"]
+  queue! %[mkdir -p "#{deploy_to}/#{shared_path}/logs"]
+  queue! %[chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/logs"]
 
-  queue! %[mkdir -p "#{deploy_to}/shared/data"]
-  queue! %[chmod g+rx,u+rwx "#{deploy_to}/shared/data"]
+  queue! %[mkdir -p "#{deploy_to}/#{shared_path}/node_modules"]
+  queue! %[chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/node_modules"]
+
+  queue! %[mkdir -p "#{deploy_to}/#{shared_path}/data"]
+  queue! %[chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/data"]
 end
 
 desc "Deploys the current version to the server."
@@ -59,23 +63,16 @@ task :deploy => :environment do
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install'
     invoke :'npm:install'
-    invoke :'npm:build'
 
     to :launch do
+      invoke :'js:build'
       invoke :'puma:restart'
       invoke :'puma:restart_ws'
     end
   end
 end
 
-namespace :npm do
-  desc 'npm install'
-  task :install => :environment do
-    queue! %[
-      cd #{deploy_to}/#{current_path} && npm install
-    ]
-  end
-
+namespace :js do
   desc 'npm run build'
   task :build => :environment do
     queue! %[
