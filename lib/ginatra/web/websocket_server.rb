@@ -7,7 +7,7 @@ module Ginatra
       def start
         websocket_port = Ginatra::Env.websocket_port || 9290
         @channel = EM::Channel.new
-        EM::WebSocket.start(:host => '0.0.0.0', :port => websocket_port) do |ws|
+        EM::WebSocket.start(:host => '127.0.0.1', :port => websocket_port) do |ws|
           ws.onopen do |handshake|
             sid = @channel.subscribe { |msg| ws.send msg }
             ws.onclose do

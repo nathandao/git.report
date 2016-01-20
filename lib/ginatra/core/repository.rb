@@ -532,6 +532,9 @@ SET f.ignored = toInt(line.ignored)
       import_current_files_graph
 
       logger.info("Finished indexing repository #{id}. Duration: #{Time.now - start_time} seconds")
+
+      logger.info("Update redis cache with the new data")
+      Ginatra::RedisCache.update_cache([@id])
     end
 
     private
