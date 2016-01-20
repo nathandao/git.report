@@ -14,4 +14,3 @@ Encoding.default_external = Encoding::UTF_8
 Encoding.default_internal = Encoding::UTF_8
 Ginatra::Env.root = ::File.expand_path('../', ::File.dirname(__FILE__))
 Ginatra::Env.data = ::File.expand_path('../data', ::File.dirname(__FILE__))
-Ginatra::Env.websocket_port = 9290
