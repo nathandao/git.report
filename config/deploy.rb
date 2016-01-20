@@ -148,7 +148,7 @@ namespace :puma do
 
   desc 'Restart puma em-websocket'
   task :restart_ws => :environment do
-    invoke :'puma_ws:stop'
-    invoke :'puma_ws:start'
+    invoke :'puma:stop_ws'
+    invoke :'puma:start_ws'
   end
 end
