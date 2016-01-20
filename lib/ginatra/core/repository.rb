@@ -388,7 +388,7 @@ SET r.start_timestamp = c.commit_timestamp
 
       # Import CSV
       session.query("
-USING PERIODIC COMMIT 500
+USING PERIODIC COMMIT 1000
 LOAD CSV WITH headers FROM 'file://#{commit_csv_file}' as line
 
 MATCH (r:Repository {id: '#{@id}'})
@@ -429,7 +429,7 @@ FOREACH (parent_hash in split(line.parents, ' ') |
 
       # Import CSV
       session.query("
-USING PERIODIC COMMIT 500
+USING PERIODIC COMMIT 1000
 LOAD CSV WITH headers FROM 'file://#{diff_csv_file}' as line
 
 MATCH (c:Commit {hash: line.hash})
@@ -492,7 +492,7 @@ DELETE r
 
       # Import CSV
       session.query("
-USING PERIODIC COMMIT 500
+USING PERIODIC COMMIT 1000
 LOAD CSV WITH headers FROM 'file://#{current_files_csv_file}' as line
 
 MATCH
