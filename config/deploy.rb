@@ -58,11 +58,6 @@ task :deploy => :environment do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install'
-
-    to :launch do
-      invoke :'puma:phased_restart'
-      invoke :'puma:phased_restart_ws'
-    end
   end
 end
 
