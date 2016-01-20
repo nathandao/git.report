@@ -58,11 +58,29 @@ task :deploy => :environment do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install'
+    invoke :'npm:install'
+    invoke :'npm:build'
 
     to :launch do
       invoke :'puma:restart'
       invoke :'puma:restart_ws'
     end
+  end
+end
+
+namespace :npm do
+  desc 'npm install'
+  dask :install => :environment do
+    queue! %[
+      cd #{deploy_to}/#{current_path} && npm install
+    ]
+  end
+
+  desc 'npm run build'
+  task :compile_assets => :environment do
+    queue! %[
+      cd #{deploy_to}/#{current_path} && npm run build
+    ]
   end
 end
 
