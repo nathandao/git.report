@@ -206,6 +206,9 @@ module Ginatra
     end
 
     def start_stream(channel, update_interval)
+      EM.add_periodic_timer(5) {
+        channel.push 'ping'
+      }
       EM.add_periodic_timer(update_interval) {
         logger = Ginatra::Log.new().logger
         if update_local == true
