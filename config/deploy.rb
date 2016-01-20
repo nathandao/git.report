@@ -140,7 +140,7 @@ namespace :puma do
   desc 'Stop puma em-websocket'
   task :stop_ws => :environment do
     queue! %[
-      for KILLPID in `ps ax | grep 'puma' | grep -v 'grep' | awk ' { print $1;}'`;
+      for KILLPID in `ps ax | grep '#{puma_ws_socket}' | grep -v 'grep' | awk ' { print $1;}'`;
         do kill -9 $KILLPID;
       done
     ]
