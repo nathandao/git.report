@@ -1,8 +1,8 @@
-let baseUrl = 'http://localhost:8080';
-if (process.env.NODE_ENV === 'production') {
-  baseUrl = '';
+let baseUrl = 'http://service.git.report';
+if (process.env.NODE_ENV === 'localdev') {
+  baseUrl = 'http://localhost:8080';
 }
-export const REPOS = ['ginatra', 'wp_calypso', 'wordpress', 'drupal'];
+export const REPOS = ['wordpress', 'drupal', 'php', 'ruby', 'ezplatform'];
 export const API_INIT_DATA = `${baseUrl}/api/init_data`;
 export const API_REPO_LIST = `${baseUrl}/api/repo_list`;
 export const API_OVERVIEW = `${baseUrl}/api/overview`;

@@ -4,7 +4,7 @@ import moment from 'moment';
 export const DEFAULT_VISIBLE_REPOS = 6;
 
 // Repo Pulse.
-export const PULSE_PERIOD = 10;
+export const PULSE_PERIOD = 7;
 
 let todayEnd = moment(new Date()).hour(23).minute(59).second(59);
 let pulseTimeStamps = [];
