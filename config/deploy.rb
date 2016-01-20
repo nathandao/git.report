@@ -58,6 +58,11 @@ task :deploy => :environment do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install'
+
+    to :launch do
+      invoke :'puma:restart'
+      invoke :'puma:restart_ws'
+    end
   end
 end
 
@@ -91,7 +96,7 @@ namespace :puma do
   end
 
   desc 'Stop puma'
-  task stop: :environment do
+  task :stop => :environment do
     queue! %[
       if [ -e '#{pumactl_web_socket}' ]; then
         cd #{deploy_to}/#{current_path} && #{pumactl_cmd} -S #{puma_web_state} stop
@@ -103,7 +108,7 @@ namespace :puma do
   end
 
   desc 'Restart puma'
-  task restart: :environment do
+  task :restart => :environment do
     invoke :'puma:stop'
     invoke :'puma:start'
   end
@@ -133,32 +138,17 @@ namespace :puma do
   end
 
   desc 'Stop puma em-websocket'
-  task stop_ws: :environment do
+  task :stop_ws => :environment do
     queue! %[
-      if [ -e '#{pumactl_ws_socket}' ]; then
-        cd #{deploy_to}/#{current_path} && #{pumactl_cmd} -S #{puma_ws_state} stop
-        rm -f '#{pumactl_ws_socket}'
-      else
-        echo 'Puma em-websocket not running!';
-      fi
+      for KILLPID in `ps ax | grep '#{puma_ws_socket}' | awk ' { print $1;}'`; do 
+        kill -9 $KILLPID;
+      done
     ]
   end
 
   desc 'Restart puma em-websocket'
-  task restart_ws: :environment do
+  task :restart_ws => :environment do
     invoke :'puma_ws:stop'
     invoke :'puma_ws:start'
-  end
-
-  desc 'Restart puma (phased restart)'
-  task phased_restart_ws: :environment do
-    queue! %[
-      if [ -e '#{pumactl_ws_socket}' ]; then
-        cd #{deploy_to}/#{current_path} && #{pumactl_cmd} #{puma_ws} -S #{puma_ws_state} phased-restart
-      else
-        echo 'Puma em-websocket is not running, so starting puma...';
-        cd #{deploy_to}/#{current_path} && #{puma_cmd} #{puma_ws} -d -e #{puma_env} -b 'unix://#{puma_ws_socket}' --control 'unix://#{pumactl_ws_socket}' --state #{puma_ws_state}
-      fi
-    ]
   end
 end
