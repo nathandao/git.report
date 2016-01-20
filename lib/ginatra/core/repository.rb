@@ -207,7 +207,11 @@ module Ginatra
 
     def start_stream(channel, update_interval)
       EM.add_periodic_timer(5) {
-        channel.push 'ping'
+        sid = channel.subscribe { |msg|
+          p 'ping ping ping'
+        }
+        channel.push 'pong!!!!!'
+        channel.unsubscribe(sid)
       }
       EM.add_periodic_timer(update_interval) {
         logger = Ginatra::Log.new().logger
