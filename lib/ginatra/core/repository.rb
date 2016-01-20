@@ -186,6 +186,7 @@ module Ginatra
           end
         end
       end
+      import_current_files_graph
       # Import branch graph again after all to update the latest branch info
       import_branch_graph
       logger.info("Repo #{id} latest data update completed") if updated == true
@@ -442,6 +443,7 @@ MERGE (c)-[:CHANGES {additions: toInt(line.additions), deletions: toInt(line.del
     end
 
     def create_current_files_csv
+      `cd #{@path} && git checkout master`
       files_tree = Dir["#{@path}/**/*"].reject{ |path| path == "#{@path}/.git" }.map{ |path|
         file_parts = path.split('/')
         {
