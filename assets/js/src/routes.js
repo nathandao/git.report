@@ -1,7 +1,7 @@
 import React from 'react';
 import { Router, Route, IndexRoute } from 'react-router';
 
-import App from 'App';
+import App from 'app';
 import Home from 'pages/Home';
 import Selector from 'pages/Selector';
 
