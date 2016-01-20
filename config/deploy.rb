@@ -70,7 +70,7 @@ end
 
 namespace :npm do
   desc 'npm install'
-  dask :install => :environment do
+  task :install => :environment do
     queue! %[
       cd #{deploy_to}/#{current_path} && npm install
     ]
