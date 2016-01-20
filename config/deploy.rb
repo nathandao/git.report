@@ -77,7 +77,7 @@ namespace :npm do
   end
 
   desc 'npm run build'
-  task :compile_assets => :environment do
+  task :build => :environment do
     queue! %[
       cd #{deploy_to}/#{current_path} && npm run build
     ]
