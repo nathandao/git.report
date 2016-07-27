@@ -1,6 +1,7 @@
 require 'mina/bundler'
 require 'mina/git'
 require 'mina/rbenv'
+require 'mina/npm'
 
 # Basic settings:
 #   domain       - The hostname to SSH to.
@@ -61,6 +62,7 @@ task :deploy => :environment do
     invoke :'git:clone'
     invoke :'deploy:link_shared_paths'
     invoke :'bundle:install'
+    invoke :'npm:install'
 
     to :launch do
       invoke :'js:build'
@@ -74,7 +76,7 @@ namespace :js do
   desc 'npm run build'
   task :build => :environment do
     queue! %[
-      cd #{deploy_to}/#{current_path} && npm i --no-bin-links || npm i --no-bin-links && npm run build
+      cd #{deploy_to}/#{current_path} && npm run build
     ]
   end
 end
