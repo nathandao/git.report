@@ -59,7 +59,7 @@
     "when": "^3.7.5"
   },
   "scripts": {
-    "build": "NODE_ENV=production webpack --progress --profile --colors",
+    "build": "NODE_ENV=production ./node_modules/webpack/bin/webpack.js --progress --profile --colors",
     "watch": "NODE_ENV=development webpack-dev-server --inline --progress --colors"
   },
   "repository": {
