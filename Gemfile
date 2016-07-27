@@ -16,6 +16,8 @@ gem 'sinatra-contrib'
 gem 'sinatra-cross_origin'
 gem 'sinatra-partial'
 gem 'mina', require: false
+gem 'mina-npm'
+gem 'mina-puma'
 
 group :test do
   gem 'codeclimate-test-reporter', require: nil
