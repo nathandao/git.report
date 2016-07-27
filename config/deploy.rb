@@ -19,7 +19,7 @@ set :port, '22'
 
 # Manually create these paths in shared/ (eg: shared/config/database.yml) in your server.
 # They will be linked in the 'deploy:link_shared_paths' step.
-set :shared_paths, ['./config.yml', 'logs', 'data', 'tmp/pids', 'tmp/sockets', 'node_modules']
+set :shared_paths, ['./config.yml', 'logs', 'data', 'tmp/pids', 'tmp/sockets']
 
 
 # This task is the environment that is loaded for most commands, such as
@@ -49,8 +49,8 @@ task :setup => :environment do
   queue! %[mkdir -p "#{deploy_to}/#{shared_path}/logs"]
   queue! %[chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/logs"]
 
-  queue! %[mkdir -p "#{deploy_to}/#{shared_path}/node_modules"]
-  queue! %[chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/node_modules"]
+#  queue! %[mkdir -p "#{deploy_to}/#{shared_path}/node_modules"]
+#  queue! %[chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/node_modules"]
 
   queue! %[mkdir -p "#{deploy_to}/#{shared_path}/data"]
   queue! %[chmod g+rx,u+rwx "#{deploy_to}/#{shared_path}/data"]
